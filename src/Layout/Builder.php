@@ -272,6 +272,13 @@ class Builder implements BuilderInterface
     private function createEdgesFor(array $dependencies, array $edgeLayout, array $vertexLayout = [])
     {
         foreach ($dependencies as $dependency) {
+            // skip dependency if it's like builtin function or const
+            $name = $dependency->toString();
+            if (false !== strpos($name, '_')
+                || preg_match('/(^[a-z]{1,}$|^[A-Z]{1,}$)/', $name)
+            ) {
+                continue;
+            }
             $vertex = $this->createVertexBy($dependency);
             $this->bindLayoutTo($vertex, $vertexLayout);
             if ($this->adtRootVertex !== $vertex) {
