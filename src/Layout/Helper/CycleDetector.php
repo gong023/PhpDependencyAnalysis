@@ -63,12 +63,12 @@ class CycleDetector
 
     private function findInDisconnections()
     {
-        foreach ($this->disconnections as $graph) {
-            $edges = $graph->getEdges();
-            foreach ($edges as $edge) {
-                $this->walkOn($edge);
-            }
-        }
+//        foreach ($this->disconnections as $graph) {
+//            $edges = $graph->getEdges();
+//            foreach ($edges as $edge) {
+//                $this->walkOn($edge);
+//            }
+//        }
     }
 
     /**
