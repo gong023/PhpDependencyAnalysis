@@ -25,7 +25,11 @@
 
 set_time_limit(0);
 ini_set('memory_limit', -1);
-ini_set('xdebug.max_nesting_level', 4000);
+if (function_exists('xdebug_disable')) {
+    xdebug_disable();
+} else {
+    ini_set('xdebug.max_nesting_level', 4000);
+}
 
 set_error_handler(
     function ($severity, $message, $file, $line) {
