@@ -73,9 +73,6 @@ class Builder implements BuilderInterface
     /** @var bool */
     private $isCallMode = false;
 
-    /** @var SplFileInfo */
-    private $currentAnalysisFile;
-
     /** @var ValidatorInterface */
     private $referenceValidator;
 
@@ -170,10 +167,9 @@ class Builder implements BuilderInterface
     private function createDependencies()
     {
         foreach ($this->analysisCollection->getAll() as $analysis) {
-            $this->currentAnalysisFile = $analysis->getFile();
             foreach ($analysis->getAdts() as $adt) {
                 if (!$adt->hasDeclaredGlobalNamespace()) {
-                    $this->createVertexAndEdgesBy($adt);
+                    $this->createVertexAndEdgesBy($analysis->getFile(), $adt);
                 }
             }
         }
@@ -196,50 +192,58 @@ class Builder implements BuilderInterface
     }
 
     /**
+     * @param SplFileInfo $currentAnalysisFile
      * @param Adt $adt
      */
-    private function createVertexAndEdgesBy(Adt $adt)
+    private function createVertexAndEdgesBy(SplFileInfo $currentAnalysisFile, Adt $adt)
     {
         $this->adtRootName = $adt->getDeclaredNamespace();
         $this->adtRootVertex = $this->createVertexBy($this->adtRootName);
-        $location = new Location($this->currentAnalysisFile, $this->adtRootName);
+        $location = new Location($currentAnalysisFile, $this->adtRootName);
         $this->addLocationTo($this->adtRootVertex, $location);
         $this->adtRootVertex->setAttribute('adt', $adt->toArray());
 
         if ($this->isCallMode) {
             $this->createEdgesFor(
+                $currentAnalysisFile,
                 $adt->getCalledNamespaces(),
                 $this->layout->getEdge()
             );
         } else {
             $this->createEdgesFor(
+                $currentAnalysisFile,
                 $adt->getMeta()->getImplementedNamespaces(),
                 $this->layout->getEdgeImplement()
             );
 
             $this->createEdgesFor(
+                $currentAnalysisFile,
                 $adt->getMeta()->getExtendedNamespaces(),
                 $this->layout->getEdgeExtend()
             );
 
             $this->createEdgesFor(
+                $currentAnalysisFile,
                 $adt->getMeta()->getUsedTraitNamespaces(),
                 $this->layout->getEdgeTraitUse()
             );
 
             $this->createEdgesFor(
+                $currentAnalysisFile,
                 $adt->getUsedNamespaces(),
                 $this->layout->getEdge()
             );
         }
 
         $this->createEdgesFor(
+            $currentAnalysisFile,
             $adt->getUnsupportedStmts(),
             $this->layout->getEdgeUnsupported(),
             $this->layout->getVertexUnsupported()
         );
 
         $this->createEdgesFor(
+            $currentAnalysisFile,
             $adt->getNamespacedStrings(),
             $this->layout->getEdgeNamespacedString(),
             $this->layout->getVertexNamespacedString()
@@ -265,11 +269,12 @@ class Builder implements BuilderInterface
     }
 
     /**
+     * @param SplFileInfo $currentAnalysisFile
      * @param Name[] $dependencies
-     * @param array  $edgeLayout
-     * @param array  $vertexLayout
+     * @param array $edgeLayout
+     * @param array $vertexLayout
      */
-    private function createEdgesFor(array $dependencies, array $edgeLayout, array $vertexLayout = [])
+    private function createEdgesFor(SplFileInfo $currentAnalysisFile, array $dependencies, array $edgeLayout, array $vertexLayout = [])
     {
         foreach ($dependencies as $dependency) {
             $vertex = $this->createVertexBy($dependency);
@@ -278,7 +283,7 @@ class Builder implements BuilderInterface
                 $edge = $this->createEdgeToAdtRootVertexBy($vertex);
                 $this->bindLayoutTo($edge, $edgeLayout);
                 $this->validateDependency($dependency, $edge);
-                $location = new Location($this->currentAnalysisFile, $dependency);
+                $location = new Location($currentAnalysisFile, $dependency);
                 $this->addLocationTo($edge, $location);
             }
         }
