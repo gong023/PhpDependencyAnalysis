@@ -148,8 +148,8 @@ class Builder implements BuilderInterface
         $this->createDependencies();
         $this->detectCycles();
         $this->bindLayoutTo($this->getGraph(), $this->layout->getGraph(), 'graphviz.graph.');
-        $this->getGraph()->setAttribute('graphviz.groups', $this->groupGenerator->getGroups());
-        $this->getGraph()->setAttribute('graphviz.groupLayout', $this->layout->getGroup());
+//        $this->getGraph()->setAttribute('graphviz.groups', $this->groupGenerator->getGroups());
+//        $this->getGraph()->setAttribute('graphviz.groupLayout', $this->layout->getGroup());
         $this->getGraph()->setAttribute('logEntries', $this->logEntries);
 
         return $this;
@@ -254,12 +254,28 @@ class Builder implements BuilderInterface
     {
         $vertex = $this->getGraph()->createVertex($name->toString(), true);
 
-        if ($groupId = $this->groupGenerator->getIdFor($name)) {
-            $vertex->setGroup($groupId);
-            $vertex->setAttribute('graphviz.group', $groupId);
+//        if ($groupId = $this->groupGenerator->getIdFor($name)) {
+//            $vertex->setGroup($groupId);
+//            $vertex->setAttribute('graphviz.group', $groupId);
+//        }
+
+        $layout = $this->layout->getVertex();
+        $usedCount = $vertex->getEdgesIn()->count();
+        switch ($usedCount) {
+            case $usedCount >= 200:
+                $layout['fillcolor'] = '#e28888';
+                break;
+            case $usedCount >= 150:
+                $layout['fillcolor'] = '#dde278';
+                break;
+            case $usedCount >= 100:
+                $layout['fillcolor'] = '#82e277';
+                break;
+            default:
+                break;
         }
 
-        $this->bindLayoutTo($vertex, $this->layout->getVertex());
+        $this->bindLayoutTo($vertex, $layout);
 
         return $vertex;
     }
@@ -284,7 +300,7 @@ class Builder implements BuilderInterface
             if ($this->adtRootVertex !== $vertex) {
                 $edge = $this->createEdgeToAdtRootVertexBy($vertex);
                 $this->bindLayoutTo($edge, $edgeLayout);
-                $this->validateDependency($dependency, $edge);
+//                $this->validateDependency($dependency, $edge);
                 $location = new Location($this->currentAnalysisFile, $dependency);
                 $this->addLocationTo($edge, $location);
             }
